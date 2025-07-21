@@ -28,24 +28,9 @@ A document question-answering system that processes PDF files and responds to qu
 
 Execute the main script with your PDF file and query. The system supports different chunking approaches:
 
-#### Option A: Using Hybrid Chunking (Recommended)
+#### How to operate CLI
 ```bash
-python main.py "path/to/your/document.pdf" --query "Your question here" --chunking hybrid
-```
-
-#### Option B: Using Semantic Chunking (Alternative)
-```bash
-python main.py "path/to/your/document.pdf" --query "Your question here" --chunking semantic
-```
-
-**Example with Hybrid Chunking:**
-```bash
-python main.py "E:\My Projects\Hegtavic Projects\All_in_media\Allinmedia-test-project\data\procyon_guide.pdf" --query "What are the main features of this system?" --chunking hybrid
-```
-
-**Example with Semantic Chunking:**
-```bash
-# python main.py "E:\My Projects\Hegtavic Projects\All_in_media\Allinmedia-test-project\data\procyon_guide.pdf" --query "What are the main features of this system?" --chunking semantic
+python main.py "path/to/your/document.pdf" --query "Your question here"
 ```
 
 ### Step 3: Get Results
