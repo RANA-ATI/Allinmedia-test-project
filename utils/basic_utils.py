@@ -14,7 +14,7 @@ def load_pdf(pdf_path, verbose=False):
     
     Args:
         pdf_path (str): Path to the PDF file
-        verbose (bool): Enable verbose output
+        verbose (bool): Enable verbose output (For Debugging: Basically to show all the outputs those which are not meant for user to see.)
         
     Returns:
         list: List of text strings from each page
