@@ -17,15 +17,15 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.argument('pdf_path', type=click.Path(exists=True))
 # Named flag or parameter. Often optional.
 @click.option('--query', '-q', default="What are the stages benchmark supports?",
-              help='Query to ask about the PDF')
+              help='Query to ask about the PDF') # --query or -q: These are the long and short flags for the option, "default": This sets the default value for the option if the user does not provide a --query or -q. "help": This is the description shown when the user runs: python script.py --help
 @click.option('--verbose', '-v', is_flag=True,
               help='Enable verbose output')
 @click.option('--output-file', help='Save response to file')
 @click.option('--show-rankings', is_flag=True,
               help='Show document rankings after retrieval')
+# Click automatically sends the parameters to main function as arguments and kwargs
 def main(pdf_path, query, **kwargs):
     """Process PDF with RAG pipeline using modular architecture"""
-    000000
     # Create configuration dictionary
     config = {
         'pdf_path': pdf_path,
@@ -36,7 +36,6 @@ def main(pdf_path, query, **kwargs):
     # Initialize and run pipeline
     pipeline = RAGPipeline(config, verbose=kwargs.get('verbose', False))
     pipeline.run(pdf_path, query)
-
 
 if __name__ == "__main__":
     main()

@@ -45,10 +45,131 @@ Allinmedia-test-project/
 │   └── int4_conversion.ipynb    # Model conversion notebook
 ├── data/
 │   └── procyon_guide.pdf        # Sample PDF document
+├── models/
+│   └── llama3.1-8B-gptq/        # Quantized model after running notebook
+├── utils/                       # Utility folder for general purpose functionalities
+│   ├── __init__.py
+│   ├── basic_utils.py
+│   ├── embedding.py
+│   ├── generator.py
+│   ├── pipeline.py
+│   ├── retriever.py
+│   └── text_processing.py
 ├── main.py                      # Main application script
-├── requirements.txt             # Python dependencies
+├── requirements.txt             # Requirements
 └── README.md                    # This file
 ```
+
+## Quantization Approaches
+
+There are mainly 3 types of quantizations:
+### 1. Post-Training Quantization (PTQ) – **Static**
+
+**When:** After the model is fully trained.  
+**How:**  
+- Quantizes **weights** and **activations** to lower precision (e.g., INT8, INT4).  
+- Uses a **calibration dataset** to compute fixed scale and zero-point values.  
+- At inference, the same precomputed scales are used → **no runtime overhead**.
+
+**Pros:**
+- No retraining required.
+- Efficient and fast inference.
+- Works well for both weights and activations.
+
+**Cons:**
+- Needs a small calibration dataset.
+- Can lose accuracy if quantization is too aggressive (especially below INT8).
+
+**Examples:** GPTQ, AWQ, SmoothQuant, BRECQ.
+
+---
+
+### 2. Post-Training Quantization (PTQ) – **Dynamic**
+
+**When:** After the model is fully trained.  
+**How:**  
+- Quantizes **weights** ahead of time.
+- **Activations** are quantized dynamically at runtime, using scales computed for each batch.
+
+**Pros:**
+- No calibration dataset required.
+- Easy to apply (e.g., PyTorch `quantize_dynamic`).
+- Good for quick CPU speed-ups.
+
+**Cons:**
+- Usually limited to INT8.
+- Slight runtime overhead from computing scales per batch.
+- Not commonly used for INT4.
+
+**Examples:** PyTorch dynamic quantization for Transformer-based NLP models.
+
+---
+
+### 3. Quantization-Aware Training (QAT)
+
+**When:** During training or fine-tuning.  
+**How:**  
+- Simulates quantization effects during training (fake quantization).  
+- Model learns to adapt to low-precision constraints.  
+- Final trained model is converted to real quantized weights.
+
+**Pros:**
+- Best accuracy retention for very low bit-widths (e.g., INT4, INT2).
+- Model is explicitly trained for quantization robustness.
+
+**Cons:**
+- Requires retraining or fine-tuning.
+- Slower development cycle.
+
+**Examples:** TensorFlow QAT, PyTorch QAT.
+
+---
+
+### 4. Hybrid / Mixed-Precision Quantization
+
+**When:** Can be applied during PTQ or QAT.  
+**How:**  
+- Different layers use different precisions (e.g., sensitive layers in FP16, others in INT8 or INT4).  
+- Balances speed, memory savings, and accuracy.
+
+**Pros:**
+- Flexibility to preserve accuracy in critical layers.
+- Works well for hardware-optimized inference (e.g., NVIDIA AMP).
+
+**Cons:**
+- More complex to configure.
+- May require manual tuning.
+
+**Examples:** NVIDIA AMP (Automatic Mixed Precision), INT8+FP16 mixes.
+
+---
+
+### Summary Table
+
+| Type | Applied | Weights | Activations | Calibration? | Retraining? | Common Bits |
+|------|---------|---------|-------------|--------------|-------------|-------------|
+| **PTQ - Static** | After training | Quantized | Quantized (fixed) | Yes | No | INT8, INT4 |
+| **PTQ - Dynamic** | After training | Quantized | Quantized (per batch) | No | No | INT8 |
+| **QAT** | During training | Quantized | Quantized | N/A | Yes | INT8, INT4, INT2 |
+| **Hybrid** | Either | Mixed | Mixed | Sometimes | Sometimes | INT8+FP16, INT4+FP32 |
+
+---
+
+### Why GPTQ for INT4 Quantization?
+
+I use **GPTQ (Gradient Post-Training Quantization)** for converting our model to INT4 because it is currently one of the **most accurate, widely adopted, and production-proven** post-training quantization techniques for Large Language Models.
+
+**Key reasons for choosing GPTQ:**
+- **Exceptional accuracy retention at low bit-widths**  
+  GPTQ minimizes quantization error using a calibration dataset, keeping performance close to the original FP16/FP32 model even at 4-bit precision.
+- **Low calibration data requirements**  
+  Strong results can be achieved with as few as 128–512 calibration samples, making it feasible even without the original training data.
+- **Optimized for fast inference**  
+  Produces GPU-friendly quantized weights, enabling significant VRAM savings and high throughput with libraries like AutoGPTQ and ExLlama.
+- **Mature ecosystem support**  
+  Hugging Face, LMDeploy, and other frameworks have native GPTQ loaders, and pre-quantized GPTQ models are widely available.
+- **Proven in real-world deployments**  
+  Extensively tested on LLaMA, Falcon, MPT, and other LLMs, with strong benchmarks in both research and production environments.
 
 ## Chunking Approaches
 
@@ -65,6 +186,20 @@ The system supports two different text chunking strategies:
 - May be slower but provides more coherent content groupings
 
 **Default:** If no chunking method is specified, the system uses hybrid chunking.
+
+## Required Hardware
+
+This project uses **LLaMA 3.1**, quantized to **INT4** with GPTQ.  
+Although INT4 greatly reduces VRAM usage, the model is still large and benefits from a modern GPU setup.
+
+**Minimum Recommended:**
+- **GPU:** NVIDIA RTX 3060 (12 GB VRAM) or higher  
+  - For smoother performance on larger context sizes, 24 GB VRAM (RTX 3090/4090, A6000) is preferred.
+- **CUDA:** 11.8+ (driver version compatible with your GPU)
+- **RAM:** 16 GB system memory
+- **CPU:** Modern multi-core CPU (for preprocessing, PDF parsing, and chunking)
+- **Disk:** ~20 GB free storage for model and quantized weights
+
 
 ## Usage Notes
 
